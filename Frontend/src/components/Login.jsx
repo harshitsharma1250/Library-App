@@ -1,6 +1,9 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { useForm } from "react-hook-form";
+import axios from 'axios';
+import toast from 'react-hot-toast';
+import { useAuth } from '../context/AuthProvider';
 
 function Login() {
   const {
@@ -9,20 +12,50 @@ function Login() {
     formState: { errors },
   } = useForm();
 
-  const onSubmit = (data) => console.log(data);
+  const onSubmit = async (data) => {
+    const userInfo = {
+      email: data.email,
+      password: data.password,
+    }
 
+    await axios.post("http://localhost:4001/user/login", userInfo)
+    .then((res) => {
+      console.log(res.data);
+      if (res.data) {
+        toast.success("Loggedin Successfully");
+        document.getElementById("my_modal_3").close();
+        setTimeout(() => {
+          window.location.reload();
+          localStorage.setItem("Users", JSON.stringify(res.data.user));
+        }, 1000);
+      }
+    })
+    .catch((err) => {
+      if (err.response) {
+        console.log(err);
+        toast.error("Error: " + err.response.data.message);
+        setTimeout(() => {}, 2000);
+      }
+    });
+};
   return (
     <div>
       <dialog id="my_modal_3" className="modal">
         <div className="modal-box">
           <h3 className="font-bold text-lg">Login</h3>
           
-          <form method="dialog" onSubmit={handleSubmit(onSubmit)}>
+          <form onSubmit={handleSubmit(onSubmit)}>
             {/* Close button */}
-            <Link to='/' className="btn btn-sm btn-circle btn-ghost absolute right-2 top-2" onClick={()=> document.getElementById("my_modal_3").close()}>✕</Link>
+            <button
+              type="button"
+              className="btn btn-sm btn-circle btn-ghost absolute right-2 top-2"
+              onClick={() => document.getElementById("my_modal_3").close()}
+            >
+              ✕
+            </button>
 
             <div className='mt-4 space-y-2'>
-              <span>Email</span>
+              <label>Email</label>
               <br />
               <input 
                 type="email" 
@@ -35,7 +68,7 @@ function Login() {
             </div>
 
             <div className='mt-4 space-y-2'>
-              <span>Password</span>
+              <label>Password</label>
               <br />
               <input 
                 type="password" 
@@ -49,9 +82,12 @@ function Login() {
 
             <div className='flex justify-around mt-4'>
               <button className='bg-pink-500 text-white rounded-md px-3 py-1 hover:bg-pink-700 duration-200' type="submit">Login</button>
-              <p>Not registered? <Link to='/signup' className='underline text-blue-500 cursor-pointer'>Sign up</Link></p>
             </div>
           </form>
+          
+          <p className='flex justify-center mt-4'>
+            Not registered? <Link to='/signup' className='underline text-blue-500 cursor-pointer ml-2'>Sign up</Link>
+          </p>
         </div>
       </dialog>
     </div>
@@ -59,3 +95,4 @@ function Login() {
 }
 
 export default Login;
+
